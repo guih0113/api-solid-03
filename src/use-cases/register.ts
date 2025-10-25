@@ -6,7 +6,8 @@ import { User } from '../../generated/prisma'
 interface RegisterUseCaseRequest {
   name: string,
   email: string,
-  password: string
+  password: string,
+  role?: 'ADMIN' | 'MEMBER'
 }
 
 interface RegisterUseCaseResponse {
@@ -16,7 +17,7 @@ interface RegisterUseCaseResponse {
 export class RegisterUseCase {
   constructor(private usersRepository: UsersRepository) {}
 
-  async execute({ name, email, password }: RegisterUseCaseRequest): Promise<RegisterUseCaseResponse> {
+  async execute({ name, email, password, role = 'MEMBER' }: RegisterUseCaseRequest): Promise<RegisterUseCaseResponse> {
     const password_hash = await hash(password, 6) //criptografando senha
   
     const userWithSameEmail = await this.usersRepository.findByEmail(email)
@@ -28,7 +29,8 @@ export class RegisterUseCase {
     const user = await this.usersRepository.create({
       name,
       email,
-      password_hash
+      password_hash,
+      role
     })
 
     return {
