@@ -29,6 +29,15 @@ app.register(usersRoutes)
 app.register(gymsRoutes)
 app.register(checkInsRoutes)
 
+// Health check endpoint
+app.get('/health', async () => {
+  return { 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  }
+})
+
 // Integração oficial do Swagger/OpenAPI via plugins do Fastify
 app.register(fastifySwagger, {
   // usa o arquivo YAML gerado em docs/openapi.yaml como especificação estática
