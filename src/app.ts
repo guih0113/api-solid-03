@@ -1,5 +1,8 @@
 import fastify from 'fastify'
 import fastifyCookie from '@fastify/cookie'
+import path from 'path'
+import fastifySwagger from '@fastify/swagger'
+import fastifySwaggerUi from '@fastify/swagger-ui'
 import { usersRoutes } from './http/controllers/users/routes'
 import { ZodError } from 'zod'
 import { env } from './env'
@@ -23,8 +26,27 @@ app.register(fastifyJwt, {
 app.register(fastifyCookie)
 
 app.register(usersRoutes)
-app.register(gymsRoutes)  
+app.register(gymsRoutes)
 app.register(checkInsRoutes)
+
+// Integração oficial do Swagger/OpenAPI via plugins do Fastify
+app.register(fastifySwagger, {
+  // usa o arquivo YAML gerado em docs/openapi.yaml como especificação estática
+  mode: 'static',
+  specification: {
+    // Fornece o caminho absoluto para o arquivo YAML para evitar problemas em tempo de execução
+    baseDir: path.resolve(__dirname, '..', 'docs'),
+    path: path.resolve(__dirname, '..', 'docs', 'openapi.yaml')
+  }
+})
+
+app.register(fastifySwaggerUi, {
+  routePrefix: '/docs',
+  uiConfig: {
+    docExpansion: 'list'
+  },
+  staticCSP: true
+})
 
 app.setErrorHandler((error, _, reply) => { // _ se refere ao request, que não é utilizado
   if(error instanceof ZodError) {
