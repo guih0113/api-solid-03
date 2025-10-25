@@ -90,6 +90,7 @@ Após configurar, o Railway fará deploy automático a cada push para o reposit�
 
 - Verifique se todas as dependências estão no `package.json`
 - Execute `npm run build` localmente para testar
+- **Erro do Prisma**: Se aparecer erro "Could not resolve generated/prisma/client", execute `npx prisma generate` antes do build
 
 ### Erro de Banco de Dados
 
