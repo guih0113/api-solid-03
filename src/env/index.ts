@@ -10,9 +10,14 @@ const envSchema = z.object({
 const _env = envSchema.safeParse(process.env)
 
 if (_env.success === false) {
-  console.error('❌ Invalid environment variables', _env.error.format())
+  console.error('❌ Invalid environment variables. See details below:')
+  for (const issue of _env.error.issues) {
+    console.error(`- Variable '${issue.path.join('.')}': ${issue.message}`)
+  }
 
-  throw new Error('Invalid environment variables.') // Não permite que a aplicação seja executada
+  console.error('\n[DEBUG] Available environment variable keys:', Object.keys(process.env).join(', '));
+
+  throw new Error('Invalid environment variables. Halting application start.')
 }
 
 export const env = _env.data
