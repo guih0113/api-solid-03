@@ -15,7 +15,7 @@ if (_env.success === false) {
     console.error(`- Variable '${issue.path.join('.')}': ${issue.message}`)
   }
 
-  console.error('\n[DEBUG] Available environment variable keys:', Object.keys(process.env).join(', '));
+  console.error('\n[DEBUG] Available environment variable keys:', Object.keys(process.env).join(', '))
 
   throw new Error('Invalid environment variables. Halting application start.')
 }

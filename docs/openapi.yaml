@@ -1,0 +1,503 @@
+openapi: 3.0.3
+info:
+  title: API de Gerenciamento de Academias
+  version: '1.0.0'
+  description: |
+    API para gerenciamento de academias e check-ins, construída com princípios SOLID
+servers:
+  - url: http://localhost:3333
+    description: Servidor local (mesma base usada nos testes)
+tags:
+  - name: Rotas
+    description: Todas as rotas da aplicação
+paths:
+  /users:
+    post:
+      tags:
+        - Rotas
+      summary: Registrar um novo usuário
+      description: |
+        Cria um usuário com nome, e-mail, senha e role (opcional). Se a role não for especificada, será criado como MEMBER.
+        Para criar um usuário administrador, inclua "role": "ADMIN" no corpo da requisição.
+        Nota: Usuários ADMIN têm acesso a funcionalidades adicionais como criar academias.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUser'
+            examples:
+              usuarioComum:
+                value:
+                  name: Guilherme Henrique
+                  email: gui.henriquess13@gmail.com
+                  password: '123456'
+              usuarioAdmin:
+                value:
+                  name: Guilherme Admin
+                  email: admin@example.com
+                  password: '123456'
+                  role: 'ADMIN'
+      responses:
+        '201':
+          description: Usuário criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+              example:
+                id: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0'
+                name: Guilherme Henrique
+                email: gui.henriquess13@gmail.com
+                role: MEMBER
+                created_at: '2025-01-01T12:00:00.000Z'
+        '400':
+          description: Requisição inválida
+
+  /sessions:
+    post:
+      tags:
+        - Rotas
+      summary: Autenticar usuário (login)
+      description: |
+        Gera um token JWT ao autenticar com e-mail e senha. Testes esperam um objeto { token } com string.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+            example:
+              email: gui.henriquess13@gmail.com
+              password: '123456'
+      responses:
+        '200':
+          description: Autenticação bem-sucedida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              examples:
+                sucesso:
+                  value:
+                    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example
+
+  /token/refresh:
+    patch:
+      tags:
+        - Rotas
+      summary: Atualizar token usando refresh token em cookie
+      description: |
+        Endpoint usado para trocar o refresh token (enviado em cookie) por um novo token de acesso.
+        Os testes enviam o cookie recebido em `Set-Cookie` e esperam status 200 + novo token e novo cookie.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Token renovado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              examples:
+                sucesso:
+                  value:
+                    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example
+
+  /me:
+    get:
+      tags:
+        - Rotas
+      summary: Obter perfil do usuário autenticado
+      description: Retorna os dados do usuário autenticado (testes verificam `user.email`).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfil do usuário
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+              examples:
+                exemplo:
+                  value:
+                    user:
+                      id: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0'
+                      name: Guilherme Silva
+                      email: guilherme@example.com
+                      role: MEMBER
+                      created_at: '2025-01-01T12:00:00.000Z'
+
+  /gyms:
+    post:
+      tags:
+        - Rotas
+      summary: Criar uma academia (gym)
+      description: |
+        Cria uma nova gym. Nos testes, o usuário autenticado com role ADMIN cria a gym e espera 201.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGym'
+            example:
+              title: Node Gym
+              description: Some description
+              phone: '13996780000'
+              latitude: -27.2092052
+              longitude: -49.6401091
+      responses:
+        '201':
+          description: Gym criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gym'
+              example:
+                id: '11111111-2222-3333-4444-555555555555'
+                title: Node Gym
+                description: Some description
+                phone: '13996780000'
+                latitude: -27.2092052
+                longitude: -49.6401091
+
+  /gyms/search:
+    get:
+      tags:
+        - Rotas
+      summary: Buscar academias por título (query)
+      description: Busca academias cujo título casa com o parâmetro `q`. Retorna lista em `gyms`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+          required: true
+          description: Termo de busca para o título da academia
+      responses:
+        '200':
+          description: Lista de academias encontradas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gyms:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Gym'
+              examples:
+                exemplo:
+                  value:
+                    gyms:
+                      - id: '11111111-2222-3333-4444-555555555555'
+                        title: Node Gym
+                        description: Some description
+                        phone: '13996780000'
+                        latitude: -27.2092052
+                        longitude: -49.6401091
+
+  /gyms/nearby:
+    get:
+      tags:
+        - Rotas
+      summary: Listar academias próximas
+      description: |
+        Recebe latitude e longitude na query e retorna academias próximas ao ponto informado.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: latitude
+          schema:
+            type: number
+          required: true
+        - in: query
+          name: longitude
+          schema:
+            type: number
+          required: true
+      responses:
+        '200':
+          description: Academias próximas
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  gyms:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Gym'
+              examples:
+                exemplo:
+                  value:
+                    gyms:
+                      - id: '11111111-2222-3333-4444-555555555555'
+                        title: Node Gym
+                        description: Some description
+                        phone: '13996780000'
+                        latitude: -27.2092052
+                        longitude: -49.6401091
+
+  /gyms/{gymId}/check-ins:
+    post:
+      tags:
+        - Rotas
+      summary: Criar check-in em uma academia
+      description: Registra um check-in do usuário autenticado na gym especificada pelo `gymId`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: gymId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                latitude:
+                  type: number
+                longitude:
+                  type: number
+            example:
+              latitude: -27.2092052
+              longitude: -49.6401091
+      responses:
+        '201':
+          description: Check-in criado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckIn'
+              example:
+                id: '99999999-8888-7777-6666-555555555555'
+                created_at: '2025-07-01T10:00:00.000Z'
+                validated_at: null
+                user_id: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0'
+                gym_id: '11111111-2222-3333-4444-555555555555'
+
+  /check-ins/history:
+    get:
+      tags:
+        - Rotas
+      summary: Histórico de check-ins do usuário
+      description: Retorna a lista de check-ins do usuário autenticado.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Histórico de check-ins
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkIns:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CheckIn'
+              examples:
+                exemplo:
+                  value:
+                    checkIns:
+                      - id: '99999999-8888-7777-6666-555555555555'
+                        created_at: '2025-07-01T10:00:00.000Z'
+                        validated_at: null
+                        user_id: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0'
+                        gym_id: '11111111-2222-3333-4444-555555555555'
+                      - id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee'
+                        created_at: '2025-07-02T11:00:00.000Z'
+                        validated_at: '2025-07-02T12:00:00.000Z'
+                        user_id: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0'
+                        gym_id: '11111111-2222-3333-4444-555555555555'
+
+  /check-ins/metrics:
+    get:
+      tags:
+        - Rotas
+      summary: Métricas de check-ins (contagem)
+      description: Retorna a contagem total de check-ins do usuário autenticado.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Contagem de check-ins
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkInsCount:
+                    type: integer
+                    example: 2
+              examples:
+                exemplo:
+                  value:
+                    checkInsCount: 2
+
+  /check-ins/{checkInId}/validate:
+    patch:
+      tags:
+        - Rotas
+      summary: Validar um check-in
+      description: Marca um check-in como validado. Nos testes retorna 204 sem conteúdo.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: checkInId
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Check-in validado com sucesso (sem conteúdo)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+
+  schemas:
+    RegisterUser:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          description: Nome do usuário
+        email:
+          type: string
+          format: email
+          description: Email do usuário
+        password:
+          type: string
+          description: Senha do usuário (mínimo 6 caracteres)
+        role:
+          type: string
+          enum: [ADMIN, MEMBER]
+          description: Tipo de usuário. Se não especificado, será criado como MEMBER
+          default: MEMBER
+
+    TokenResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: 'Token JWT usado no Authorization: Bearer <token>'
+      example:
+        token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example
+
+    CreateGym:
+      type: object
+      required:
+        - title
+        - latitude
+        - longitude
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+      example:
+        title: Node Gym
+        description: Some description
+        phone: '13996780000'
+        latitude: -27.2092052
+        longitude: -49.6401091
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: enum,
+          enum: [ADMIN, MEMBER]
+        created_at:
+          type: string
+          format: date-time
+
+    Gym:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        checkIns:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckIn'
+
+    CheckIn:
+      type: object
+      properties:
+        id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        validated_at:
+          type: string
+          format: date-time
+          nullable: true
+        user_id:
+          type: string
+        gym_id:
+          type: string
