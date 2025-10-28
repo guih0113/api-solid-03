@@ -30,6 +30,7 @@ COPY --from=builder /app/build ./build
 
 # Copy Prisma schema and generated client
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/generated ./generated
 COPY --from=builder /app/node_modules/.prisma ./.prisma
 
 # Expose the port the app runs on
