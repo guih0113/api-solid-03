@@ -35,10 +35,7 @@ app.register(fastifySwagger, {
   mode: 'static',
   specification: {
     // Fornece o caminho absoluto para o arquivo YAML para evitar problemas em tempo de execução
-    path: path.resolve(
-      __dirname,
-      env.NODE_ENV === 'production' ? './docs/openapi.yaml' : '../docs/openapi.yaml',
-    ),
+    path: path.resolve(__dirname, 'docs', 'openapi.yaml'),
   },
 })
 
