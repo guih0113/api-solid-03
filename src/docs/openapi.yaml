@@ -5,6 +5,8 @@ info:
   description: |
     API para gerenciamento de academias e check-ins, construída com princípios SOLID
 servers:
+  - url: https://api-solid-03-production.up.railway.app
+    description: Servidor de Produção (Railway)
   - url: http://localhost:3333
     description: Servidor local (mesma base usada nos testes)
 tags:
