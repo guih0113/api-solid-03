@@ -31,13 +31,13 @@ paths:
             examples:
               usuarioComum:
                 value:
-                  name: Guilherme Henrique
-                  email: gui.henriquess13@gmail.com
+                  name: User Test
+                  email: usertest@example.com
                   password: '123456'
               usuarioAdmin:
                 value:
-                  name: Guilherme Admin
-                  email: admin@example.com
+                  name: Admin Test
+                  email: admintest@example.com
                   password: '123456'
                   role: 'ADMIN'
       responses:
@@ -49,8 +49,8 @@ paths:
                 $ref: '#/components/schemas/User'
               example:
                 id: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0'
-                name: Guilherme Henrique
-                email: gui.henriquess13@gmail.com
+                name: User Test
+                email: usertest@example.com
                 role: MEMBER
                 created_at: '2025-01-01T12:00:00.000Z'
         '400':
@@ -75,7 +75,7 @@ paths:
                 password:
                   type: string
             example:
-              email: gui.henriquess13@gmail.com
+              email: usertest@example.com
               password: '123456'
       responses:
         '200':
@@ -134,8 +134,8 @@ paths:
                   value:
                     user:
                       id: 'a1b2c3d4-e5f6-7890-1234-56789abcdef0'
-                      name: Guilherme Silva
-                      email: guilherme@example.com
+                      name: User Test
+                      email: usertest@example.com
                       role: MEMBER
                       created_at: '2025-01-01T12:00:00.000Z'
 
