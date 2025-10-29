@@ -37,4 +37,4 @@ COPY --from=builder /app/node_modules/.prisma ./.prisma
 EXPOSE 3333
 
 # Command to run the application
-CMD ["node", "build/server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node build/server.js"]
