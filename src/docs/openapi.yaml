@@ -145,6 +145,7 @@ paths:
         - Rotas
       summary: Criar uma academia (gym)
       description: |
+        **[ Rota de Administrador ]**
         Cria uma nova gym. Nos testes, o usuário autenticado com role ADMIN cria a gym e espera 201.
       security:
         - bearerAuth: []
@@ -362,7 +363,9 @@ paths:
       tags:
         - Rotas
       summary: Validar um check-in
-      description: Marca um check-in como validado. Nos testes retorna 204 sem conteúdo.
+      description: |
+        **[ Rota de Administrador ]**
+        Marca um check-in como validado. Nos testes retorna 204 sem conteúdo.
       security:
         - bearerAuth: []
       parameters:
